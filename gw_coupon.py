@@ -3,6 +3,7 @@ from random import random
 from time import sleep
 from dotenv import dotenv_values
 from tempMail2 import TempMail
+from hashlib import md5
 import os
 
 
@@ -16,7 +17,8 @@ def send_keys(driver, element, msg):
 dotenv_config = dotenv_values()
 
 # Phase 1: Get temp-mail email
-email = "johnsmith@email.com"
+tm = TempMail(api_key=dotenv_config.get('API_KEY'), api_domain=dotenv_config.get('API_DOMAIN'))
+email = tm.get_email_address()
 
 # Phase 2: Sign up to newsletter
 driver = webdriver.Firefox(executable_path=os.path.relpath('webdrivers\geckodriver.exe'))
