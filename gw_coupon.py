@@ -16,8 +16,9 @@ def send_keys(driver, element, msg):
 dotenv_config = dotenv_values()
 
 # Phase 1: Get temp-mail email
-# Phase 2: Sign up to newsletter
 email = "johnsmith@email.com"
+
+# Phase 2: Sign up to newsletter
 driver = webdriver.Firefox(executable_path=os.path.relpath('webdrivers\geckodriver.exe'))
 driver.get(dotenv_config.get('URL'))
 
