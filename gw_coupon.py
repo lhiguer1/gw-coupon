@@ -90,9 +90,9 @@ requests.get(confirmation_link)
 
 # Phase 4: Download coupon
 ## wait for second email which cointains link to coupon
-sleep(20) # this one takes a while
+sleep(30) # this one takes a while
 for _ in range(5):
-    sleep(10)
+    sleep(15)
     mailbox = tm.get_mailbox(email_address, md5(email_address.encode()).hexdigest())
     if type(mailbox) == list and len(mailbox) == 2:
         break
@@ -102,5 +102,17 @@ else:
 ## save email and mailbox
 save_mailbox(mailbox)
 
-## find coupon link and respond
+## find coupon link and Download
+coupon_email = mailbox[1]['mail_text_only']
+
+tree = lxml.html.fromstring(coupon_email)
+
+for link in tree.iterlinks():
+    (element, attribute, coupon_link, pos) = link
+
+    if element.tag == 'img' and element.attrib.get('alt') != None and 'Click here' in element.attrib.get('alt'):
+        parent_element = element.getparent()
+        coupon_link = parent_element.attrib.get('href')
+        break
     
+print(f'{coupon_link=}')
