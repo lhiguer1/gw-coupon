@@ -1,5 +1,3 @@
-from selenium import webdriver
-from random import random
 from time import sleep
 from dotenv import dotenv_values
 from tempMail2 import TempMail
@@ -9,13 +7,11 @@ import pickle
 import lxml.html
 import os
 
-
-def send_keys(driver, element, msg):
-    '''Send msg to element. sleep() and random() are used to look more human'''
-    sleep(random())
-    for char in msg:
-        sleep(random())
-        element.send_keys(char)
+# dotenv setup
+dotenv_config = dotenv_values()
+api_key = dotenv_config.get('API_KEY')
+api_domain = dotenv_config.get('API_DOMAIN')
+zip_code = dotenv_config.get('ZIP_CODE')
 
 def save_mailbox(mailbox):
     '''Save mailbox using pickle module along with the html of each email'''
@@ -35,40 +31,28 @@ def save_mailbox(mailbox):
             fp.write(html)
 
 
-
-dotenv_config = dotenv_values()
-
 # Phase 1: Get temp-mail email
-tm = TempMail(api_key=dotenv_config.get('API_KEY'), api_domain=dotenv_config.get('API_DOMAIN'))
+tm = TempMail(api_key=api_key, api_domain=api_domain)
 email_address = tm.get_email_address()
 print(f'{email_address=}')
 
 # Phase 2: Sign up to newsletter
-driver = webdriver.Firefox(executable_path=os.path.relpath('webdrivers\geckodriver.exe'))
-driver.get(dotenv_config.get('URL'))
+url = "https://goodwillaz.us10.list-manage.com/subscribe/post-json"
+params = {
+    "u": "8d92937eb473f959e4b574e25",
+    "id": "c64256085e",
+    "EMAIL": email_address,
+    "MMERGE3": zip_code,
+    "subscribe": "Subscribe",
+}
 
-element = driver.find_element_by_id('mce-EMAIL')
-send_keys(driver, element, email_address)
+request = requests.get(url, params)
+assert request.json()['result'] == 'success'
 
-element = driver.find_element_by_id('mce-FNAME')
-send_keys(driver, element, dotenv_config.get('FNAME'))
-
-element = driver.find_element_by_id('mce-LNAME')
-send_keys(driver, element, dotenv_config.get('LNAME'))
-
-element = driver.find_element_by_id('mce-MMERGE3')
-send_keys(driver, element, dotenv_config.get('ZIP_CODE'))
-
-element = driver.find_element_by_id('mc-embedded-subscribe')
-sleep(2)
-element.click()
-sleep(1)
-driver.close()
 # Phase 3: Confirm email
-## wait for email
 for _ in range(5):
-    sleep(5)
-    mailbox = tm.get_mailbox(email_address, md5(email_address.encode()).hexdigest())
+    sleep(30)
+    mailbox = tm.get_mailbox(email_address)
     if type(mailbox) == list and len(mailbox) == 1:
         break
 else:
@@ -90,10 +74,9 @@ requests.get(confirmation_link)
 
 # Phase 4: Download coupon
 ## wait for second email which cointains link to coupon
-sleep(30) # this one takes a while
 for _ in range(5):
-    sleep(15)
-    mailbox = tm.get_mailbox(email_address, md5(email_address.encode()).hexdigest())
+    sleep(90)
+    mailbox = tm.get_mailbox(email_address)
     if type(mailbox) == list and len(mailbox) == 2:
         break
 else:

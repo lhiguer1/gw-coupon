@@ -4,5 +4,4 @@
 .vscode
 
 webdrivers/**
-!**/.gitkeep
 mailbox/**
