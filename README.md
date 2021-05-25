@@ -1,5 +1,12 @@
-### To Do
-- Phase 1: Get temp-mail email
-- Phase 2: Sign up to news letter
-- Phase 3: Confirm email
-- Phase 4: Download coupon
+## Goodwill Coupon Downloader
+Enrolls to the Goodwill newsletter using a temporary email address so that I don't have to go through the process of signing up myself.
+
+### Requirements
+- Requests
+- [tempmail](https://github.com/CITGuru/tempmail)
+
+### Credits
+- [tempmail](https://github.com/CITGuru/tempmail)
+
+### Notes
+Requires a [RapidAPI](https://rapidapi.com/Privatix/api/temp-mail) Key
