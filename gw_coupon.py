@@ -1,39 +1,18 @@
 from time import sleep
 from dotenv import dotenv_values
-from tempMail2 import TempMail
-from hashlib import md5
+import secmail
 import requests
-import pickle
 import lxml.html
 import os
+import re
 
 # dotenv setup
 dotenv_config = dotenv_values()
-api_key = dotenv_config.get('API_KEY')
-api_domain = dotenv_config.get('API_DOMAIN')
 zip_code = dotenv_config.get('ZIP_CODE')
 
-def save_mailbox(mailbox):
-    '''Save mailbox using pickle module along with the html of each email'''
-    mailbox_path = 'mailbox'
-    
-    if not os.path.exists(mailbox_path):
-        os.mkdir(mailbox_path)
-    
-    # save mailbox.pickle
-    with open(os.path.join(mailbox_path, 'mailbox.pickle'), 'wb') as fp:
-        pickle.dump(mailbox, fp)
-
-    # save html of each email
-    for i, email in enumerate(mailbox):
-        html = email['mail_text_only']
-        with open(os.path.join(mailbox_path, f'email{i}.html'), 'w') as fp:
-            fp.write(html)
-
-
-# Phase 1: Get temp-mail email
-tm = TempMail(api_key=api_key, api_domain=api_domain)
-email_address = tm.get_email_address()
+# Phase 1: Get secmail email
+sm = secmail.SecMail()
+email_address = sm.generate_email()
 print(f'{email_address=}')
 
 # Phase 2: Sign up to newsletter
@@ -52,19 +31,16 @@ assert request.json()['result'] == 'success'
 # Phase 3: Confirm email
 for _ in range(5):
     sleep(30)
-    mailbox = tm.get_mailbox(email_address)
-    if type(mailbox) == list and len(mailbox) == 1:
+    messages = sm.get_messages(email_address)
+    if len(messages.json) == 1:
         break
 else:
     raise Exception('Aborting Process: Mailbox not receiving any new emails.')
 
-## save email and mailbox
-save_mailbox(mailbox)
-
 ## find confirmation link and respond
-confirmation_email = mailbox[0]['mail_text_only']
+confirmation_email = sm.read_message(email_address, messages.json[0]['id'])
 
-tree = lxml.html.fromstring(confirmation_email)
+tree = lxml.html.fromstring(confirmation_email.htmlBody)
 for link in tree.iterlinks():
     (element, attribute, confirmation_link, pos) = link
     if element.find_class('formEmailButton'):
@@ -76,19 +52,15 @@ requests.get(confirmation_link)
 ## wait for second email which cointains link to coupon
 for _ in range(5):
     sleep(90)
-    mailbox = tm.get_mailbox(email_address)
-    if type(mailbox) == list and len(mailbox) == 2:
+    messages = sm.get_messages(email_address)
+    if len(messages.json) == 2:
         break
 else:
     raise Exception('Aborting Process: Mailbox not receiving any new emails.')
 
-## save email and mailbox
-save_mailbox(mailbox)
-
 ## find coupon link and Download
-coupon_email = mailbox[1]['mail_text_only']
-
-tree = lxml.html.fromstring(coupon_email)
+coupon_message = sm.read_message(email_address, messages.json[0]['id'])
+tree = lxml.html.fromstring(coupon_message.htmlBody)
 
 for link in tree.iterlinks():
     (element, attribute, coupon_link, pos) = link
