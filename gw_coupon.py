@@ -41,10 +41,9 @@ else:
 confirmation_email = sm.read_message(email_address, messages.json[0]['id'])
 
 tree = lxml.html.fromstring(confirmation_email.htmlBody)
-for link in tree.iterlinks():
-    (element, attribute, confirmation_link, pos) = link
-    if element.find_class('formEmailButton'):
-        break
+form_button = tree.find_class('formEmailButton')[0]
+confirmation_link = form_button.attrib.get('href')
+
 print(f'{confirmation_link=}')
 requests.get(confirmation_link)
 
@@ -62,10 +61,8 @@ else:
 coupon_message = sm.read_message(email_address, messages.json[0]['id'])
 tree = lxml.html.fromstring(coupon_message.htmlBody)
 
-for link in tree.iterlinks():
-    (element, attribute, coupon_link, pos) = link
-
-    if element.tag == 'img' and element.attrib.get('alt') != None and 'Click here' in element.attrib.get('alt'):
+for element in tree.iter(tag='img'):
+    if element.attrib.get('alt') and 'Click here' in element.attrib.get('alt'):
         parent_element = element.getparent()
         coupon_link = parent_element.attrib.get('href')
         break
