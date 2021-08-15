@@ -1,8 +1,4 @@
-certifi==2020.12.5
-chardet==4.0.0
-idna==2.10
-lxml==4.6.3
-python-dotenv==0.17.1
-requests==2.25.1
-secmail==1.0.1
-urllib3==1.26.5
+lxml
+python-dotenv
+requests
+secmail
