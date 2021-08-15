@@ -88,11 +88,24 @@ def get_links() -> dict:
 
     return links
 
+def save_links(*args, **kwargs):
+    links = kwargs.get('links') or get_links()
+    with open('links.txt', 'wt') as fd:
+        fd.writelines('\n'.join([f'{link}={links[link]}' for link in links]))
+
+
 def get_coupons() -> list:
+    # TODO
+    pass
+
+def save_coupons():
+    coupons = get_coupons()
+    # TODO
     pass
 
 if __name__=='__main__':
     links = get_links()
+    save_links(links=links)
     for link in links:
         print(f'{link}={links[link]}')
         
