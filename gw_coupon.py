@@ -1,8 +1,11 @@
 from time import sleep
+import os
 import secmail
 import requests
 import lxml.html
 import random
+
+COUPON_PATH = 'coupons'
 
 ZIP_CODES = [ 
     85032, 85281, 85225, 85142, 85308, 85383, 85251, 85282, 85326, 85338, 85022,
@@ -76,7 +79,7 @@ def get_links() -> dict:
     else:
         raise Exception('Aborting Process: Mailbox not receiving any new emails.')
 
-    ## find coupon link and Download
+    ## find coupon link
     coupon_message = sm.read_message(links['email_address'], messages.json[0]['id'])
     tree = lxml.html.fromstring(coupon_message.htmlBody)
 
@@ -88,24 +91,53 @@ def get_links() -> dict:
 
     return links
 
-def save_links(*args, **kwargs):
-    links = kwargs.get('links') or get_links()
-    with open('links.txt', 'wt') as fd:
+def save_links(links=None):
+    links = links or get_links()
+
+    if not os.path.exists(COUPON_PATH):
+        os.mkdir(COUPON_PATH)
+
+    path = os.path.join(COUPON_PATH, 'links.txt')
+    with open(path, 'wt') as fd:
         fd.writelines('\n'.join([f'{link}={links[link]}' for link in links]))
 
 
-def get_coupons() -> list:
-    # TODO
-    pass
+def get_coupons(links=None) -> dict:
+    links = links or get_links()
+    
+    request = requests.get(links['coupon'])
+    tree = lxml.html.fromstring(request.text)
+    
+    coupon_elements = []
+    for element in tree.iter(tag='h3'):
+        if len(element.attrib) == 1:
+            coupon_elements.append(element)
 
-def save_coupons():
-    coupons = get_coupons()
-    # TODO
-    pass
+    coupons = {}
+    for element in coupon_elements:
+        month = element.text
+        coupon_link = element.getnext().get('href')
+
+        request = requests.get(coupon_link)
+        coupons[month] = request.content
+
+    return coupons
+
+def save_coupons(coupons=None):
+    coupons = coupons or get_coupons()
+
+    if not os.path.exists(COUPON_PATH):
+        os.mkdir(COUPON_PATH)
+
+    for month in coupons:
+        path = os.path.join(COUPON_PATH, month.lower()+'.png')
+        with open(path, 'wb') as fd:
+            fd.write(coupons[month])
+
 
 if __name__=='__main__':
     links = get_links()
-    save_links(links=links)
-    for link in links:
-        print(f'{link}={links[link]}')
-        
+    save_links(links)
+    coupons = get_coupons(links)
+    save_coupons(coupons)
+    
