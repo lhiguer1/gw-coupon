@@ -59,7 +59,7 @@ def get_links() -> dict:
         if len(messages.json) == 1:
             break
     else:
-        raise Exception('Aborting Process: Mailbox not receiving any new emails.')
+        return links
 
     # find confirmation_email and respond
     confirmation_email = sm.read_message(links['email_address'], messages.json[0]['id'])
@@ -77,7 +77,7 @@ def get_links() -> dict:
         if len(messages.json) == 2:
             break
     else:
-        raise Exception('Aborting Process: Mailbox not receiving any new emails.')
+        return links
 
     ## find coupon link
     coupon_message = sm.read_message(links['email_address'], messages.json[0]['id'])
@@ -86,9 +86,9 @@ def get_links() -> dict:
     for element in tree.iter(tag='img'):
         if element.attrib.get('alt') and 'Click here' in element.attrib.get('alt'):
             parent_element = element.getparent()
-            links['coupon'] = parent_element.attrib.get('href')
             break
 
+    links['coupon'] = parent_element.attrib.get('href')
     return links
 
 def save_links(links=None):
@@ -104,6 +104,9 @@ def save_links(links=None):
 
 def get_coupons(links=None) -> dict:
     links = links or get_links()
+
+    if 'coupon' not in links.keys():
+        return None
     
     request = requests.get(links['coupon'])
     tree = lxml.html.fromstring(request.text)
@@ -125,6 +128,8 @@ def get_coupons(links=None) -> dict:
 
 def save_coupons(coupons=None):
     coupons = coupons or get_coupons()
+    if coupons is None:
+        return
 
     if not os.path.exists(COUPON_PATH):
         os.mkdir(COUPON_PATH)
