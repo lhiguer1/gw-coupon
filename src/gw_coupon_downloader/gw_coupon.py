@@ -7,7 +7,8 @@ import random
 
 COUPON_PATH = 'coupons'
 
-ZIP_CODES = [ 
+def get_links() -> dict:
+    ZIP_CODES = [ 
     85032, 85281, 85225, 85142, 85308, 85383, 85251, 85282, 85326, 85338, 85022,
     85345, 85204, 85301, 85255, 85008, 85201, 85205, 85351, 85248, 85374, 85207,
     85254, 85016, 85224, 85375, 85283, 85209, 85260, 85018, 85382, 85206, 85041, 
@@ -30,16 +31,15 @@ ZIP_CODES = [
     85097, 85190
     ]
 
-url = "https://goodwillaz.us10.list-manage.com/subscribe/post-json"
-params = {
-    "u": "8d92937eb473f959e4b574e25",
-    "id": "c64256085e",
-    "EMAIL": '',
-    "MMERGE3": random.choice(ZIP_CODES),
-    "subscribe": "Subscribe",
-}
-
-def get_links() -> dict:
+    url = "https://goodwillaz.us10.list-manage.com/subscribe/post-json"
+    params = {
+        "u": "8d92937eb473f959e4b574e25",
+        "id": "c64256085e",
+        "EMAIL": '',
+        "MMERGE3": random.choice(ZIP_CODES),
+        "subscribe": "Subscribe",
+    }
+    
     links = dict()
 
     # get email address
