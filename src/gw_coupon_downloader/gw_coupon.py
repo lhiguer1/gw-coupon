@@ -139,10 +139,11 @@ def save_coupons(coupons=None):
         with open(path, 'wb') as fd:
             fd.write(coupons[month])
 
-
-if __name__=='__main__':
+def download():
     links = get_links()
     save_links(links)
     coupons = get_coupons(links)
     save_coupons(coupons)
-    
+
+if __name__=='__main__':
+    download()
